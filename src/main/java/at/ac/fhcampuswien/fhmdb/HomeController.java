@@ -1,5 +1,6 @@
 package at.ac.fhcampuswien.fhmdb;
 
+import at.ac.fhcampuswien.fhmdb.api.MovieAPI;
 import at.ac.fhcampuswien.fhmdb.models.Genre;
 import at.ac.fhcampuswien.fhmdb.models.Movie;
 import at.ac.fhcampuswien.fhmdb.models.SortedState;
@@ -12,13 +13,13 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 
+import java.io.IOException;
 import java.net.URL;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.ResourceBundle;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class HomeController implements Initializable {
     @FXML
@@ -38,17 +39,27 @@ public class HomeController implements Initializable {
 
     public List<Movie> allMovies;
 
+    @FXML
+    public JFXComboBox releaseYearComboBox;
+
+    @FXML
+    public JFXComboBox ratingComboBox;
+
     protected ObservableList<Movie> observableMovies = FXCollections.observableArrayList();
 
     protected SortedState sortedState;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        initializeState();
+        try {
+            initializeState();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         initializeLayout();
     }
 
-    public void initializeState() {
+    public void initializeState() throws IOException {
         allMovies = Movie.initializeMovies();
         observableMovies.clear();
         observableMovies.addAll(allMovies); // add all movies to the observable list
@@ -60,12 +71,26 @@ public class HomeController implements Initializable {
         movieListView.setCellFactory(movieListView -> new MovieCell()); // apply custom cells to the listview
 
         Object[] genres = Genre.values();   // get all genres
-        genreComboBox.getItems().add("No filter");  // add "no filter" to the combobox
+        genreComboBox.getItems().add("No Filter");  // add "no filter" to the combobox
         genreComboBox.getItems().addAll(genres);    // add all genres to the combobox
         genreComboBox.setPromptText("Filter by Genre");
+
+        releaseYearComboBox.setPromptText("Filter by Release Year");
+        releaseYearComboBox.getItems().add("No Filter");
+        releaseYearComboBox.getItems().addAll(observableMovies.stream()
+                .map(Movie::getReleaseYear)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toCollection(ArrayList::new)));
+        ratingComboBox.setPromptText("Minimum Rating");
+        ratingComboBox.getItems().add("No Filter");
+        // Create an ObservableList with ratings from 1 to 10
+        ObservableList<Integer> possibleRatings = FXCollections.observableArrayList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+        // Add all items to the ComboBox
+        ratingComboBox.getItems().addAll(possibleRatings);
     }
 
-    public void sortMovies(){
+    public void sortMovies() {
         if (sortedState == SortedState.NONE || sortedState == SortedState.DESCENDING) {
             sortMovies(SortedState.ASCENDING);
         } else if (sortedState == SortedState.ASCENDING) {
@@ -84,60 +109,36 @@ public class HomeController implements Initializable {
             sortedState = SortedState.DESCENDING;
         }
     }
-
-    public List<Movie> filterByQuery(List<Movie> movies, String query){
-        if(query == null || query.isEmpty()) return movies;
-
-        if(movies == null) {
-            throw new IllegalArgumentException("movies must not be null");
-        }
-
-        return movies.stream()
-                .filter(Objects::nonNull)
-                .filter(movie ->
-                    movie.getTitle().toLowerCase().contains(query.toLowerCase()) ||
-                    movie.getDescription().toLowerCase().contains(query.toLowerCase())
-                )
-                .toList();
+    public void sortBtnClicked(ActionEvent actionEvent) {
+        sortMovies();
     }
 
-    public List<Movie> filterByGenre(List<Movie> movies, Genre genre){
-        if(genre == null) return movies;
-
-        if(movies == null) {
-            throw new IllegalArgumentException("movies must not be null");
-        }
-
-        return movies.stream()
-                .filter(Objects::nonNull)
-                .filter(movie -> movie.getGenres().contains(genre))
-                .toList();
-    }
-
-    public void applyAllFilters(String searchQuery, Object genre) {
-        List<Movie> filteredMovies = allMovies;
-
-        if (!searchQuery.isEmpty()) {
-            filteredMovies = filterByQuery(filteredMovies, searchQuery);
-        }
-
-        if (genre != null && !genre.toString().equals("No filter")) {
-            filteredMovies = filterByGenre(filteredMovies, Genre.valueOf(genre.toString()));
-        }
-
-        observableMovies.clear();
-        observableMovies.addAll(filteredMovies);
-    }
-
-    public void searchBtnClicked(ActionEvent actionEvent) {
+    public void searchBtnClicked(ActionEvent actionEvent) throws IOException {
         String searchQuery = searchField.getText().trim().toLowerCase();
-        Object genre = genreComboBox.getSelectionModel().getSelectedItem();
 
-        applyAllFilters(searchQuery, genre);
+        // Get selected values safely
+        String genre = getSelectedValue(genreComboBox);
+        String minRating = getSelectedValue(ratingComboBox);
+        String releaseYear = getSelectedValue(releaseYearComboBox);
+
+        // Convert values while handling "No filter" case
+        String genreResult = genre.equalsIgnoreCase("no filter") ? null : genre;
+        Integer minRatingResult = minRating.equalsIgnoreCase("no filter") ? null : Integer.parseInt(minRating);
+        Integer releaseYearResult = releaseYear.equalsIgnoreCase("no filter") ? null : Integer.parseInt(releaseYear);
+
+        // Fetch movies and sort
+        List<Movie> filteredMovies = MovieAPI.getMovies(searchQuery, genreResult, releaseYearResult, minRatingResult);
+        observableMovies.clear();
+        observableMovies.addAll(filteredMovies); // add all movies to the observable list
+        sortedState = SortedState.NONE;
         sortMovies(sortedState);
     }
 
-    public void sortBtnClicked(ActionEvent actionEvent) {
-        sortMovies();
+    /**
+     * Helper method to get selected value from ComboBox safely
+     */
+    private String getSelectedValue(ComboBox<?> comboBox) {
+        Object selected = comboBox.getSelectionModel().getSelectedItem();
+        return (selected != null) ? selected.toString() : "No filter";
     }
 }

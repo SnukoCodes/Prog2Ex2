@@ -8,13 +8,17 @@ import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+
+import java.util.Arrays;
 import java.util.stream.Collectors;
 
 public class MovieCell extends ListCell<Movie> {
     private final Label title = new Label();
     private final Label detail = new Label();
     private final Label genre = new Label();
-    private final VBox layout = new VBox(title, detail, genre);
+    private final Label year = new Label();
+    private final Label rating = new Label();
+    private final VBox layout = new VBox(title, detail, genre, year, rating);
 
     @Override
     protected void updateItem(Movie movie, boolean empty) {
@@ -24,35 +28,46 @@ public class MovieCell extends ListCell<Movie> {
             setGraphic(null);
             setText(null);
         } else {
+            // Apply styling class
             this.getStyleClass().add("movie-cell");
-            title.setText(movie.getTitle());
-            detail.setText(
-                    movie.getDescription() != null
-                            ? movie.getDescription()
-                            : "No description available"
-            );
 
-            String genres = movie.getGenres()
-                    .stream()
+            // Set title
+            title.setText(movie.getTitle());
+            title.getStyleClass().add("text-yellow");
+            title.setFont(title.getFont().font(20));
+
+            // Set description
+            detail.setText(movie.getDescription() != null ? movie.getDescription() : "No description available");
+            detail.getStyleClass().add("text-white");
+            detail.setMaxWidth(this.getScene().getWidth() - 30);
+            detail.setWrapText(true);
+
+            // Set genres
+            String genres = Arrays.stream(movie.getGenres())
                     .map(Enum::toString)
                     .collect(Collectors.joining(", "));
             genre.setText(genres);
-
-
-            // color scheme
-            title.getStyleClass().add("text-yellow");
-            detail.getStyleClass().add("text-white");
             genre.getStyleClass().add("text-white");
             genre.setStyle("-fx-font-style: italic");
-            layout.setBackground(new Background(new BackgroundFill(Color.web("#454545"), null, null)));
 
-            // layout
-            title.fontProperty().set(title.getFont().font(20));
-            detail.setMaxWidth(this.getScene().getWidth() - 30);
-            detail.setWrapText(true);
+            // Set year and rating
+            year.setText("Year: " + movie.getReleaseYear());
+            rating.setText("Rating: " + movie.getRating());
+
+            year.getStyleClass().add("text-white");
+            rating.getStyleClass().add("text-white");
+
+            // Layout settings
+            layout.setBackground(new Background(new BackgroundFill(Color.web("#454545"), null, null)));
             layout.setPadding(new Insets(10));
-            layout.spacingProperty().set(10);
-            layout.alignmentProperty().set(javafx.geometry.Pos.CENTER_LEFT);
+            layout.setSpacing(10);
+            layout.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
+            // Organizing elements in a VBox
+            VBox infoBox = new VBox(title, detail, genre, year, rating);
+            infoBox.setSpacing(5);
+
+            layout.getChildren().setAll(infoBox); // Update layout with all elements
             setGraphic(layout);
         }
     }

@@ -14,52 +14,44 @@ public class MovieAPI {
     private static final OkHttpClient client = new OkHttpClient();
 
     // Methode: Alle Filme abrufen
-    public List<Movie> getAllMovies() throws IOException {
-        Request request = new Request.Builder()
-                .url(BASE_URL)
-                .header("User-Agent", "http.agent")
-                .build();
-
-        Response response = client.newCall(request).execute();
-
-        if (!response.isSuccessful()) {
-            throw new IOException("Unexpected code " + response);
-        }
-
-        String responseBody = response.body().string();
-        return parseMovies(responseBody);
-    }
-
-    // Methode: Filme mit Filter abrufen
-    public List<Movie> searchMovies(String query, String genre) throws IOException {
+    public static List<Movie> getMovies(String query, String genre, Integer releaseYear, Integer ratingFrom) throws IOException {
         HttpUrl.Builder urlBuilder = HttpUrl.parse(BASE_URL).newBuilder();
 
+        // Add query parameters only if they are provided (not null)
         if (query != null && !query.isEmpty()) {
             urlBuilder.addQueryParameter("query", query);
         }
         if (genre != null && !genre.isEmpty()) {
             urlBuilder.addQueryParameter("genre", genre);
         }
+        if (releaseYear != null) {
+            urlBuilder.addQueryParameter("releaseYear", String.valueOf(releaseYear));
+        }
+        if (ratingFrom != null) {
+            urlBuilder.addQueryParameter("ratingFrom", String.valueOf(ratingFrom));
+        }
 
         String url = urlBuilder.build().toString();
-
         Request request = new Request.Builder()
                 .url(url)
                 .header("User-Agent", "http.agent")
                 .build();
 
-        Response response = client.newCall(request).execute();
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                throw new IOException("Unexpected response code: " + response);
+            }
 
-        if (!response.isSuccessful()) {
-            throw new IOException("Unexpected code " + response);
+            assert response.body() != null;
+            String responseBody = response.body().string();
+            return parseMovies(responseBody);
         }
-
-        String responseBody = response.body().string();
-        return parseMovies(responseBody);
     }
 
+
+
     // JSON in Movie-Objekte umwandeln
-    private List<Movie> parseMovies(String json) {
+    private static List<Movie> parseMovies(String json) {
         Gson gson = new Gson();
         Type movieListType = new TypeToken<List<Movie>>() {}.getType();
         return gson.fromJson(json, movieListType);

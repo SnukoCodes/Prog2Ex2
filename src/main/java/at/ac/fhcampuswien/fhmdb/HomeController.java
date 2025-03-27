@@ -141,4 +141,27 @@ public class HomeController implements Initializable {
         Object selected = comboBox.getSelectionModel().getSelectedItem();
         return (selected != null) ? selected.toString() : "No filter";
     }
+
+    
+    public String getMostPopularActor(List<Movie> movies) { 
+        if (movies == null || movies.isEmpty()) {
+            return "";
+        }
+        
+        return movies.stream()
+                // 1. collect actors from all movies
+                .flatMap(movie -> Arrays.stream(movie.getMainCast()))
+                // 2. group actors and count how often each appears
+                .collect(Collectors.groupingBy(
+                        actor -> actor,
+                        Collectors.counting()
+                ))
+                // 3. find actor with the highest count
+                .entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                // 4. return actors name - or empty string if none found
+                .map(Map.Entry::getKey)
+                .orElse("");
+    }
+
 }

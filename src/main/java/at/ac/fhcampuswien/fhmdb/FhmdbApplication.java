@@ -37,6 +37,8 @@ public class FhmdbApplication extends Application {
             // [Placeholder] show functionality of getLongestMovieTitle
             System.out.println("Longest title length: " + controller.getLongestMovieTitle(movies));
 
+            // [Placeholder] show functionality of get countMoviesFrom
+            System.out.println("Nolan movies: " + controller.countMoviesFrom(movies, "Christopher Nolan"));
             
         } catch (Exception e) {
             e.printStackTrace();

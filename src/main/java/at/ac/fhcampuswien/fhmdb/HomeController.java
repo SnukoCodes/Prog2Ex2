@@ -141,4 +141,71 @@ public class HomeController implements Initializable {
         Object selected = comboBox.getSelectionModel().getSelectedItem();
         return (selected != null) ? selected.toString() : "No filter";
     }
+
+    // get actor who appears most often
+    public String getMostPopularActor(List<Movie> movies) { 
+        if (movies == null || movies.isEmpty()) {
+            return "";
+        }
+        
+        return movies.stream()
+                // 1. collect actors from all movies
+                .flatMap(movie -> Arrays.stream(movie.getMainCast()))
+                // 2. group actors and count how often each appears
+                .collect(Collectors.groupingBy(
+                        actor -> actor,
+                        Collectors.counting()
+                ))
+                // 3. find actor with the highest count
+                .entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                // 4. return actors name - or empty string if none found
+                .map(Map.Entry::getKey)
+                .orElse("");
+    }
+
+    // find movie with the longest movie-title length
+    public int getLongestMovieTitle(List<Movie> movies) {
+        if (movies == null || movies.isEmpty()) {
+            return 0;
+        }
+        
+        return movies.stream()
+                // 1: extract all movie titles
+                .map(Movie::getTitle)
+                // 2: map each title to its length
+                .mapToInt(String::length)
+                // 3: find the max length
+                .max()
+                .orElse(0);
+    }
+
+    // counts # of movies from a specific director
+    public long countMoviesFrom(List<Movie> movies, String director) {
+        if (movies == null || director == null) {
+            return 0;
+        }
+        
+        return movies.stream()
+                // 1: filter movies with a director
+                .filter(movie -> Arrays.stream(movie.getDirectors())
+                        .anyMatch(d -> d.equals(director)))
+                // 2: count the number of matching movies
+                .count();
+    }
+
+    // return movies which were released between given years
+    public List<Movie> getMoviesBetweenYears(List<Movie> movies, int startYear, int endYear) {
+        if (movies == null) {
+            return new ArrayList<>();
+        }
+        
+        return movies.stream()
+                // 1: filter movies for release year
+                .filter(movie -> movie.getReleaseYear() >= startYear && 
+                                movie.getReleaseYear() <= endYear)
+                // 2: return as list
+                .collect(Collectors.toList());
+    }
+
 }

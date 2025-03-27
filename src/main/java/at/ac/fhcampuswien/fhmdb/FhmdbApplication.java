@@ -8,6 +8,10 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.util.Objects;
 
+import at.ac.fhcampuswien.fhmdb.api.MovieAPI;
+import at.ac.fhcampuswien.fhmdb.models.Movie;
+import java.util.List;
+
 public class FhmdbApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException {
@@ -20,6 +24,24 @@ public class FhmdbApplication extends Application {
     }
 
     public static void main(String[] args) {
+        // to prevent the app of crashing in case of ioerror
+        try {
+
+            // get movies from the api
+            List<Movie> movies = MovieAPI.getMovies(null, null, null, null);
+            HomeController controller = new HomeController();
+
+            // show functionality of getMostPopularActor
+            System.out.println("Most popular actor: " + controller.getMostPopularActor(movies));
+            
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        // launch the app
         launch();
+
+
     }
 }

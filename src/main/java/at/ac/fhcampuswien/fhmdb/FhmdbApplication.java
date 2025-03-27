@@ -39,6 +39,9 @@ public class FhmdbApplication extends Application {
 
             // [Placeholder] show functionality of get countMoviesFrom
             System.out.println("Nolan movies: " + controller.countMoviesFrom(movies, "Christopher Nolan"));
+
+            // [Placeholder] show functionality of getMoviesBetweenYears
+            System.out.println("2000-2010 movies: " + controller.getMoviesBetweenYears(movies, 2000, 2010).size());
             
         } catch (Exception e) {
             e.printStackTrace();

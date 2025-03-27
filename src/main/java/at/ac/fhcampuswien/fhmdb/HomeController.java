@@ -142,7 +142,7 @@ public class HomeController implements Initializable {
         return (selected != null) ? selected.toString() : "No filter";
     }
 
-    
+    // get actor who appears most often
     public String getMostPopularActor(List<Movie> movies) { 
         if (movies == null || movies.isEmpty()) {
             return "";
@@ -164,6 +164,7 @@ public class HomeController implements Initializable {
                 .orElse("");
     }
 
+    // find movie with the longest movie-title length
     public int getLongestMovieTitle(List<Movie> movies) {
         if (movies == null || movies.isEmpty()) {
             return 0;
@@ -177,6 +178,20 @@ public class HomeController implements Initializable {
                 // 3: find the max length
                 .max()
                 .orElse(0);
+    }
+
+    // counts # of movies from a specific director
+    public long countMoviesFrom(List<Movie> movies, String director) {
+        if (movies == null || director == null) {
+            return 0;
+        }
+        
+        return movies.stream()
+                // 1: filter movies with a director
+                .filter(movie -> Arrays.stream(movie.getDirectors())
+                        .anyMatch(d -> d.equals(director)))
+                // 2: count the number of matching movies
+                .count();
     }
 
 }

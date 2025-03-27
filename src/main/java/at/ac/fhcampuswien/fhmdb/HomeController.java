@@ -164,4 +164,19 @@ public class HomeController implements Initializable {
                 .orElse("");
     }
 
+    public int getLongestMovieTitle(List<Movie> movies) {
+        if (movies == null || movies.isEmpty()) {
+            return 0;
+        }
+        
+        return movies.stream()
+                // 1: extract all movie titles
+                .map(Movie::getTitle)
+                // 2: map each title to its length
+                .mapToInt(String::length)
+                // 3: find the max length
+                .max()
+                .orElse(0);
+    }
+
 }

@@ -31,9 +31,12 @@ public class FhmdbApplication extends Application {
             List<Movie> movies = MovieAPI.getMovies(null, null, null, null);
             HomeController controller = new HomeController();
 
-            // show functionality of getMostPopularActor
+            // [Placeholder] show functionality of getMostPopularActor
             System.out.println("Most popular actor: " + controller.getMostPopularActor(movies));
-            
+
+            // [Placeholder] show functionality of getLongestMovieTitle
+            System.out.println("Longest title length: " + controller.getLongestMovieTitle(movies));
+
             
         } catch (Exception e) {
             e.printStackTrace();

@@ -7,11 +7,12 @@ import okhttp3.*;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.net.http.HttpClient;
 import java.util.List;
 
 public class MovieAPI {
     private static final String BASE_URL = "https://prog2.fh-campuswien.ac.at/movies";
-    private static final OkHttpClient client = new OkHttpClient();
+    private static OkHttpClient httpClient = new OkHttpClient();
 
     // Methode: Alle Filme abrufen
     public static List<Movie> getMovies(String query, String genre, Integer releaseYear, Integer ratingFrom) throws IOException {
@@ -37,7 +38,7 @@ public class MovieAPI {
                 .header("User-Agent", "http.agent")
                 .build();
 
-        try (Response response = client.newCall(request).execute()) {
+        try (Response response = httpClient.newCall(request).execute()) {
             if (!response.isSuccessful()) {
                 throw new IOException("Unexpected response code: " + response);
             }
@@ -48,12 +49,17 @@ public class MovieAPI {
         }
     }
 
-
-
     // JSON in Movie-Objekte umwandeln
     private static List<Movie> parseMovies(String json) {
         Gson gson = new Gson();
         Type movieListType = new TypeToken<List<Movie>>() {}.getType();
         return gson.fromJson(json, movieListType);
+    }
+
+    public static List<Movie> setClientAndGetMovies(OkHttpClient client) throws IOException {
+        httpClient = client;
+        List<Movie> movies = getMovies(null, null, null, null);
+        httpClient = new OkHttpClient();
+        return movies;
     }
 }

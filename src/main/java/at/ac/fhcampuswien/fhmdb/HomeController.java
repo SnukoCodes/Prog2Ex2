@@ -45,9 +45,9 @@ public class HomeController implements Initializable {
     @FXML
     public JFXComboBox ratingComboBox;
 
-    protected ObservableList<Movie> observableMovies = FXCollections.observableArrayList();
+    public ObservableList<Movie> observableMovies = FXCollections.observableArrayList();
 
-    protected SortedState sortedState;
+    public SortedState sortedState;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -208,4 +208,11 @@ public class HomeController implements Initializable {
                 .collect(Collectors.toList());
     }
 
+    public List<Movie> filterByQuery(String query) throws IOException {
+        return MovieAPI.getMovies(query,null,null,null);
+    }
+
+    public List<Movie> filterByGenre(Genre genre) throws IOException {
+        return MovieAPI.getMovies(null, String.valueOf(genre),null,null);
+    }
 }
